@@ -30,7 +30,7 @@ class MHough
 
 private:
 	vector<TLine*> vline;
-	TLine* L;
+	TLine* aLine;
 	MTrack myTrack;
 	TH2F* hHough;
 	TH2F* hXY;

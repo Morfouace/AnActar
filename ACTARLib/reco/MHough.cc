@@ -77,14 +77,14 @@ void MHough::FindMaxima(int panel, double dmax, bool visu)
 		double x2=64+64*panel;
 		double y1=4*(rhM-x1*cos(thM*TMath::Pi()/180))/(sin(thM*TMath::Pi()/180));
 		double y2=4*(rhM-x2*cos(thM*TMath::Pi()/180))/(sin(thM*TMath::Pi()/180));
-		L = new TLine(x1,y1,x2,y2);
-		vline.push_back(L);
+		//aLine = new TLine(x1,y1,x2,y2);
+		//vline.push_back(aLine);
 
 		if(visu){
 			Ctest->cd(1);
 			hYZ->Draw("colz");
-			vline[vline.size()-1]->SetLineWidth(2);
-			vline[vline.size()-1]->Draw("same");
+			//vline[vline.size()-1]->SetLineWidth(2);
+			//vline[vline.size()-1]->Draw("same");
 			Ctest->cd(2);
 			hHough->Draw("colz");
 			Ctest->cd(3);
