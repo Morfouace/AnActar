@@ -1,0 +1,9 @@
+config_actar
+NumberOfPadsX= 62
+NumberOfPadsY= 32
+PadSizeX= 2
+PadSizeY= 2
+Gas= He-iC4H10
+Pressure= 1001
+# mm/microsecond
+DriftVelocity= 5.4

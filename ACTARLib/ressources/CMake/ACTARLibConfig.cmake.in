@@ -1,0 +1,18 @@
+# - Config file for the ACTARLib package
+# It defines the following variables
+#  ACTARLib_INCLUDE_DIRS - include directories for NPLib
+#  ACTARLib_LIBRARIES    - libraries to link against
+#  ACTARLib_EXECUTABLE   - the bar executable
+ 
+# Compute paths
+get_filename_component(ACTARLib_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+set(ACTARLib_USE_FILE "@CMAKE_BINARY_DIR@/ACTARLibConfig.cmake")
+set(ACTARLib_INCLUDE_DIRS "@CMAKE_INCLUDE_OUTPUT_DIRECTORY@")
+set(ACTAR "$ENV{ACTAR}")
+set(ACTARLIB "${ACTAR}/ACTARLib")
+include_directories("${ACTARLib_INCLUDE_DIRS}")
+
+set(ACTARLib_LIBRARIES "-L@CMAKE_BINARY_DIR@/lib -lACTARreco -lACTARcore")
+
+# These are IMPORTED targets created by ACTARLibTargets.cmake
+set(ACTARLib_EXECUTABLE actaranalysis)
