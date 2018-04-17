@@ -26,89 +26,121 @@ int main(int argc, char** argv){
   for(int i=0;i<nentries;i++){
     Clear();
     FillHistoAndMap(i);
+    ApplySiMayaCalibration();
     //cout << "/// " << hXYZ->GetEntries() << endl;
-     if(vX.size()>10){
-    //if(vX.size()>10 && SiMayaRawEnergy.size()>0){
+    if(vX.size()>10){
+      //if(vX.size()>10 && SiMayaRawEnergy.size()>0){
       //TreatEventWithHough();
-	TreatEventWithSimpleRansac();
-	TVector3 vX = TVector3(1,0,0);
-	TVector3 aTrack;
+      TreatEventWithSimpleRansac();
+      TVector3 vX = TVector3(1,0,0);
+      TVector3 aTrack;
 
-  	TrackMult = vTrack.size();
-  
-	if(TrackMult>0){
-		double scalarproduct=0;
-		int WhichTrack=0;
-	  	for(unsigned int i=0; i<TrackMult; i++){
-			TVector3 vtest = TVector3(vTrack[i].GetDirectionVector().X(),vTrack[i].GetDirectionVector().Y(),vTrack[i].GetDirectionVector().Z());
-			TVector3 vunit = vtest.Unit();
-			double scalar = abs(vunit.Dot(vX));
-			vScalar.push_back(scalar);
-			//cout << scalar << endl;
-			//cout << scalarproduct << endl;
-			if(scalar>scalarproduct){
-				WhichTrack=i; 
-				scalarproduct=scalar;
-			}
-  		}
-		//cout << vTrack.size() << " / " << WhichTrack << " / " << scalarproduct << endl;
+      TrackMult = vTrack.size();
 
-		double XBeam = vTrack[WhichTrack].GetDirectionVector().X()*Configurator.GetPadSizeX();
-		double YBeam = vTrack[WhichTrack].GetDirectionVector().Y()*Configurator.GetPadSizeY();
-		double ZBeam = vTrack[WhichTrack].GetDirectionVector().Z()*Configurator.GetDriftVelocity()*20e-3;
-		TVector3 vBeam = TVector3(XBeam,YBeam,ZBeam);
-	
-		double XBeamPoint = vTrack[WhichTrack].GetXh()*Configurator.GetPadSizeX();
-		double YBeamPoint = vTrack[WhichTrack].GetYh()*Configurator.GetPadSizeY();
-		double ZBeamPoint = vTrack[WhichTrack].GetZh()*Configurator.GetDriftVelocity()*20e-3;
-		TVector3 vBeamPos = TVector3(XBeamPoint,YBeamPoint,ZBeamPoint);
+      if(TrackMult>0){
+        double scalarproduct=0;
+        int WhichTrack=0;
+        for(unsigned int i=0; i<TrackMult; i++){
+          TVector3 vtest = TVector3(vTrack[i].GetDirectionVector().X(),vTrack[i].GetDirectionVector().Y(),vTrack[i].GetDirectionVector().Z());
+          TVector3 vunit = vtest.Unit();
+          double scalar = abs(vunit.Dot(vX));
+          vScalar.push_back(scalar);
+          //cout << scalar << endl;
+          //cout << scalarproduct << endl;
+          if(scalar>scalarproduct){
+            WhichTrack=i;
+            scalarproduct=scalar;
+          }
+        }
+        //cout << vTrack.size() << " / " << WhichTrack << " / " << scalarproduct << endl;
 
-		for(unsigned int i=0; i<TrackMult; i++){
-    			if(i!=WhichTrack){
-			    double Xdir = vTrack[i].GetDirectionVector().X();
-			    double Ydir = vTrack[i].GetDirectionVector().Y();
-    			    double Zdir = vTrack[i].GetDirectionVector().Z();
-			    aTrack = TVector3(Xdir*Configurator.GetPadSizeX(), Ydir*Configurator.GetPadSizeY(), Zdir*20e-3*Configurator.GetDriftVelocity());
+        double XBeam = vTrack[WhichTrack].GetDirectionVector().X()*Configurator.GetPadSizeX();
+        double YBeam = vTrack[WhichTrack].GetDirectionVector().Y()*Configurator.GetPadSizeY();
+        double ZBeam = vTrack[WhichTrack].GetDirectionVector().Z()*Configurator.GetDriftVelocity()*20e-3;
+        TVector3 vBeam = TVector3(XBeam,YBeam,ZBeam);
 
-		    	    XVertex.push_back(vTrack[i].GetVertexPostion(vBeam,vBeamPos).X());
-    		    	    YVertex.push_back(vTrack[i].GetVertexPostion(vBeam,vBeamPos).Y());
-			    ZVertex.push_back(vTrack[i].GetVertexPostion(vBeam,vBeamPos).Z());
-	
-			    double angle = vBeam.Angle(aTrack)*180/TMath::Pi();
-			    if(angle>90) angle = 180-angle;
-			    vTrackAngle.push_back(angle);
+        double XBeamPoint = vTrack[WhichTrack].GetXh()*Configurator.GetPadSizeX();
+        double YBeamPoint = vTrack[WhichTrack].GetYh()*Configurator.GetPadSizeY();
+        double ZBeamPoint = vTrack[WhichTrack].GetZh()*Configurator.GetDriftVelocity()*20e-3;
+        TVector3 vBeamPos = TVector3(XBeamPoint,YBeamPoint,ZBeamPoint);
 
-			    if(vTrackLength[i]>0){
-			      dedx.push_back(vTrackCharge[i]/(16./cos(angle*TMath::Pi()/180)));
-			    }
-			    else dedx.push_back(-100);
+        for(unsigned int i=0; i<TrackMult; i++){
+          if(i!=WhichTrack){
+            double Xdir = vTrack[i].GetDirectionVector().X();
+            double Ydir = vTrack[i].GetDirectionVector().Y();
+            double Zdir = vTrack[i].GetDirectionVector().Z();
+            aTrack = TVector3(Xdir*Configurator.GetPadSizeX(), Ydir*Configurator.GetPadSizeY(), Zdir*20e-3*Configurator.GetDriftVelocity());
 
-			    double x1 = vTrack[i].GetXm()*Configurator.GetPadSizeX();
-        		    double x2 = vTrack[i].GetXh()*Configurator.GetPadSizeX();
-			    double y1 = vTrack[i].GetYm()*Configurator.GetPadSizeY()-0.5*Configurator.GetNumberOfPadsY()*Configurator.GetPadSizeY();
-			    double y2 = vTrack[i].GetYh()*Configurator.GetPadSizeY()-0.5*Configurator.GetNumberOfPadsY()*Configurator.GetPadSizeY();
-        		    double z1 = -(vTrack[i].GetZm()-256)*Configurator.GetDriftVelocity()*20e-3;
-        		    double z2 = -(vTrack[i].GetZh()-256)*Configurator.GetDriftVelocity()*20e-3;
-        		    if(vScalar[i]<0.99)GetMayaSiHitPosition(x1,x2,y1,y2,z1,z2);
-			}
-  		}	
-  	
+            XVertex.push_back(vTrack[i].GetVertexPostion(vBeam,vBeamPos).X());
+            YVertex.push_back(vTrack[i].GetVertexPostion(vBeam,vBeamPos).Y());
+            ZVertex.push_back(vTrack[i].GetVertexPostion(vBeam,vBeamPos).Z());
 
-	
-		/*for(unsigned int i=0; i<TrackMult; i++){
-			if(i!=WhichTrack){
-		        	double x1 = vTrack[i].GetXm()*Configurator.GetPadSizeX();
-        			double x2 = vTrack[i].GetXh()*Configurator.GetPadSizeX();
-			        double y1 = vTrack[i].GetYm()*Configurator.GetPadSizeY()-0.5*Configurator.GetNumberOfPadsY()*Configurator.GetPadSizeY();
-			        double y2 = vTrack[i].GetYh()*Configurator.GetPadSizeY()-0.5*Configurator.GetNumberOfPadsY()*Configurator.GetPadSizeY();
-        		 	double z1 = -(vTrack[i].GetZm()-256)*Configurator.GetDriftVelocity()*20e-3;
-        		 	double z2 = -(vTrack[i].GetZh()-256)*Configurator.GetDriftVelocity()*20e-3;
-        		 	GetMayaSiHitPosition(x1,x2,y1,y2,z1,z2);
-			}
-		}*/
-      	}
+            double angle = vBeam.Angle(aTrack)*180/TMath::Pi();
+            if(angle>90) angle = 180-angle;
+            vTrackAngle.push_back(angle);
+
+            double x1 = vTrack[i].GetXm()*Configurator.GetPadSizeX();
+            double x2 = vTrack[i].GetXh()*Configurator.GetPadSizeX();
+            double y1 = vTrack[i].GetYm()*Configurator.GetPadSizeY()-0.5*Configurator.GetNumberOfPadsY()*Configurator.GetPadSizeY();
+            double y2 = vTrack[i].GetYh()*Configurator.GetPadSizeY()-0.5*Configurator.GetNumberOfPadsY()*Configurator.GetPadSizeY();
+            double z1 = -(vTrack[i].GetZm()-256)*Configurator.GetDriftVelocity()*20e-3;
+            double z2 = -(vTrack[i].GetZh()-256)*Configurator.GetDriftVelocity()*20e-3;
+            if(vScalar[i]<0.998)GetMayaSiHitPosition(x1,x2,y1,y2,z1,z2);
+            /*else{
+              SiMayaPosZ.push_back(-1000);
+              SiMayaPosY.push_back(-1000);
+            }*/
+          }
+          /*else if(i==WhichTrack){
+            XVertex.push_back(-1000);
+            YVertex.push_back(-1000);
+            ZVertex.push_back(-1000);
+            vTrackAngle.push_back(-1000);
+            SiMayaPosZ.push_back(-1000);
+            SiMayaPosY.push_back(-1000);
+          }*/
+        }
+      }
     }
 
+    // Loop on Silicon Multiplicities
+    unsigned int SiMult = SiMayaEnergy.size();
+    //cout << TrackMult << " / " << SiMult << endl;
+    if(TrackMult>0 && SiMult>0){
+      for(unsigned int k=0; k<SiMult; k++){
+        for(unsigned int p=0; p<TrackMult; p++){
+          if(IsGoingToSilicon(p)){
+            if(XVertex[p]>-60 && XVertex[p]<256){
+              //cout << "Mult= " << TrackMult << " / p= " << p << endl;
+              ThetaLab.push_back(vTrackAngle[p]);
+              TVector3 HitPos = TVector3(SiMayaDistanceX,SiMayaPosY[p],SiMayaPosZ[p]);
+              PhiLab.push_back(HitPos.Phi()*180./TMath::Pi());
+              dedx.push_back(vTrackCharge[p]/(16./cos(vTrackAngle[p]*TMath::Pi()/180)));
+
+              // Physical variables calualtion //
+              double LengthInGas = 256-XVertex[p]+58;
+              double angle = vTrackAngle[p]*TMath::Pi()/180;
+              double etot = EnergyLoss_p.EvaluateInitialEnergy(SiMayaEnergy[k]*MeV,LengthInGas*mm,angle);
+              ELab.push_back(etot);
+              //cout << LengthInGas << " " << SiMayaEnergy[k] << " " << etot-SiMayaEnergy[k] << endl;
+              double EBeamAtVertex = EnergyLoss_Ne.Slow(90.2*MeV,(60+XVertex[p])*mm,0);
+              BeamEnergy.push_back(EBeamAtVertex);
+
+              TheReaction->SetBeamEnergy(EBeamAtVertex);
+              TheReaction->SetNuclei3(etot,angle);
+              ExcitationEnergy.push_back(TheReaction->GetExcitation4());
+            }
+          }
+          /*else{
+            dedx.push_back(-1000);
+            ThetaLab.push_back(-1000);
+            PhiLab.push_back(-1000);
+            ExcitationEnergy.push_back(-1000);
+            ELab.push_back(-1000);
+          }*/
+        }
+      }
+    }
     OutputTree->Fill();
   }
 
@@ -122,6 +154,28 @@ int main(int argc, char** argv){
   myApp.Run(kTRUE);
 
   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+bool IsGoingToSilicon(int TrackID){
+  bool IsIn=false;
+
+  if(abs(SiMayaPosY[TrackID])<400 && abs(SiMayaPosZ[TrackID]<400)){
+    IsIn=true;
+  }
+
+  return IsIn;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void ApplySiMayaCalibration(){
+  int SiMult = SiMayaRawEnergy.size();
+  for(int i=0; i<SiMult; i++){
+    double Value = p0[SiMayaNumber[i]-1] + SiMayaRawEnergy[i]*p1[SiMayaNumber[i]-1];
+    if(Value>0){
+      SiMayaEnergy.push_back(Value/1000);
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -168,6 +222,11 @@ void ReadRunToTreat(string PathToRun){
 
 ////////////////////////////////////////////////////////////////////////////////
 void Init(){
+  // NPtool init //
+  EnergyLoss_Ne = NPL::EnergyLoss("EnergyLossTable/SRIM_Ne_110mb_iC4H10-2pair.txt","SRIM",100);
+  EnergyLoss_p = NPL::EnergyLoss("EnergyLossTable/SRIM_H_110mb_iC4H10-2pair.txt","SRIM",100);
+  TheReaction = new NPL::Reaction("20Ne(p,p)20Ne@90.2");
+
   Configurator.ReadConfigurationFile("config/actar_config.txt");
   PadNumberX = Configurator.GetNumberOfPadsX();
   PadNumberY = Configurator.GetNumberOfPadsY();
@@ -179,16 +238,16 @@ void Init(){
 
   /*hXYZ = new TH3F("XYZ","XYZ",PadNumberX,0,PadNumberX,PadNumberY,0,PadNumberY,128,0,512);
   hXY = new TH2F("XY","XY",PadNumberX,0,PadNumberX,PadNumberY,0,PadNumberY);
-	hXZ = new TH2F("XZ","XZ",PadNumberX,0,PadNumberX,128,0,512);
-	hYZ = new TH2F("YZ","YZ",PadNumberY,0,PadNumberY,128,0,512);*/
+  hXZ = new TH2F("XZ","XZ",PadNumberX,0,PadNumberX,128,0,512);
+  hYZ = new TH2F("YZ","YZ",PadNumberY,0,PadNumberY,128,0,512);*/
 
   string filename = "./dat/LT.dat";
   ifstream ifile;
   ifile.open(filename.c_str());
- 	cout << "Using LookupTable from: " << filename << endl;
- 	for(int i=0;i<NumberOfCobo*NumberOfASAD*NumberOfAGET*NumberOfChannel;i++){
+  cout << "/// Using LookupTable from: " << filename << " ///" << endl;
+  for(int i=0;i<NumberOfCobo*NumberOfASAD*NumberOfAGET*NumberOfChannel;i++){
     ifile >> TABLE[0][i] >> TABLE[1][i] >> TABLE[2][i] >> TABLE[3][i] >> TABLE[4][i] >> TABLE[5][i];
-	//cout << TABLE[5][16476] << endl;
+    //cout << TABLE[5][16476] << endl;
   }
   ifile.close();
 
@@ -198,9 +257,21 @@ void Init(){
   string token;
   int vxi_param, si_nbr;
   for(int i=0; i<20; i++){
-	ifile_si >> token >> vxi_param >> si_nbr;
-	Si_map[vxi_param] = si_nbr+1;
+    ifile_si >> token >> vxi_param >> si_nbr;
+    Si_map[vxi_param] = si_nbr+1;
   }
+  ifile_si.close();
+
+  string calib_filename = "./calib/calibSi_ACTAR_final.txt";
+  ifstream ifile_calib;
+  ifile_calib.open(calib_filename.c_str());
+  cout << "/// Loading Calibration for Silicon detectors ///" << endl;
+  int si_number;
+  for(int i=0; i<20; i++){
+    ifile_calib >> si_number >> p0[i] >> p1[i];
+    cout << si_number+1 << " / p0=" << p0[i] << " / p1=" << p1[i] << endl;
+  }
+  cout << endl;
 
   chain->SetBranchAddress("data",&EvtRed);
 
@@ -209,7 +280,7 @@ void Init(){
 
 ////////////////////////////////////////////////////////////////////////////////
 void InitOutputTree(){
-  OutputFile = new TFile("FittedTracks.root","RECREATE");
+  OutputFile = new TFile("test.root","RECREATE");
   OutputTree = new TTree("PhysicsTree","PhysicsTree");
 
   OutputTree->Branch("Event",&Event,"Event/I");
@@ -230,8 +301,13 @@ void InitOutputTree(){
 
   OutputTree->Branch("SiMayaNumber",&SiMayaNumber);
   OutputTree->Branch("SiMayaRawEnergy",&SiMayaRawEnergy);
+  OutputTree->Branch("SiMayaEnergy",&SiMayaEnergy);
   OutputTree->Branch("SiMayaPosY",&SiMayaPosY);
   OutputTree->Branch("SiMayaPosZ",&SiMayaPosZ);
+
+  OutputTree->Branch("BeamEnergy",&BeamEnergy);
+  OutputTree->Branch("ELab",&ELab);
+  OutputTree->Branch("ExcitationEnergy",&ExcitationEnergy);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -274,19 +350,19 @@ void FillHistoAndMap(int i){
     if(co!=31){
       for(unsigned int hit=0;hit<EvtRed->CoboAsad[it].peakheight.size();hit++){
         if(EvtRed->CoboAsad[it].peakheight[hit]>10 && EvtRed->CoboAsad[it].peaktime[hit]>10){
-		//cout << where << " " << TABLE[4][where] << " " << TABLE[5][where] << endl; 
-		if(Hit[TABLE[4][where]][TABLE[5][where]]<2){
-            		if(Hit[TABLE[4][where]+1][TABLE[5][where]]>0 || Hit[TABLE[4][where]-1][TABLE[5][where]]>0 || Hit[TABLE[4][where]][TABLE[5][where]+1]>0 || Hit[TABLE[4][where]][TABLE[5][where]-1]>0){
-          			vX.push_back(TABLE[4][where]);
-         			vY.push_back(TABLE[5][where]);
-          			vZ.push_back(EvtRed->CoboAsad[it].peaktime[hit]);
-          			vQ.push_back(EvtRed->CoboAsad[it].peakheight[hit]);
-          			//hXYZ->Fill(TABLE[4][where],TABLE[5][where],EvtRed->CoboAsad[it].peaktime[hit],EvtRed->CoboAsad[it].peakheight[hit]);
-          			//hXY->Fill(TABLE[4][where],TABLE[5][where],EvtRed->CoboAsad[it].peakheight[hit]);
-          			//hXZ->Fill(TABLE[4][where],EvtRed->CoboAsad[it].peaktime[hit],EvtRed->CoboAsad[it].peakheight[hit]);
-          			//hYZ->Fill(TABLE[5][where],EvtRed->CoboAsad[it].peaktime[hit],EvtRed->CoboAsad[it].peakheight[hit]);
-			}
-		}
+          //cout << where << " " << TABLE[4][where] << " " << TABLE[5][where] << endl;
+          if(Hit[TABLE[4][where]][TABLE[5][where]]<2){
+            if(Hit[TABLE[4][where]+1][TABLE[5][where]]>0 || Hit[TABLE[4][where]-1][TABLE[5][where]]>0 || Hit[TABLE[4][where]][TABLE[5][where]+1]>0 || Hit[TABLE[4][where]][TABLE[5][where]-1]>0){
+              vX.push_back(TABLE[4][where]);
+              vY.push_back(TABLE[5][where]);
+              vZ.push_back(EvtRed->CoboAsad[it].peaktime[hit]);
+              vQ.push_back(EvtRed->CoboAsad[it].peakheight[hit]);
+              //hXYZ->Fill(TABLE[4][where],TABLE[5][where],EvtRed->CoboAsad[it].peaktime[hit],EvtRed->CoboAsad[it].peakheight[hit]);
+              //hXY->Fill(TABLE[4][where],TABLE[5][where],EvtRed->CoboAsad[it].peakheight[hit]);
+              //hXZ->Fill(TABLE[4][where],EvtRed->CoboAsad[it].peaktime[hit],EvtRed->CoboAsad[it].peakheight[hit]);
+              //hYZ->Fill(TABLE[5][where],EvtRed->CoboAsad[it].peaktime[hit],EvtRed->CoboAsad[it].peakheight[hit]);
+            }
+          }
         }
       }
     }
@@ -294,34 +370,34 @@ void FillHistoAndMap(int i){
     else if(co==31){
       for(unsigned int hit=0;hit<EvtRed->CoboAsad[it].peakheight.size();hit++){
         int vxi_parameter = EvtRed->CoboAsad[it].peaktime[hit];
-	if(Si_map[vxi_parameter]<21 && Si_map[vxi_parameter]>0){
-           SiMayaRawEnergy.push_back(EvtRed->CoboAsad[it].peakheight[hit]);
-       	   SiMayaNumber.push_back(Si_map[vxi_parameter]);
-	}
-      } 
-    }  
+        if(Si_map[vxi_parameter]<21 && Si_map[vxi_parameter]>0){
+          SiMayaRawEnergy.push_back(EvtRed->CoboAsad[it].peakheight[hit]);
+          SiMayaNumber.push_back(Si_map[vxi_parameter]);
+        }
+      }
+    }
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void CleanPad()
 {
-	for(unsigned int it=0; it<EvtRed->CoboAsad.size(); it++){
-	    int co=EvtRed->CoboAsad[it].globalchannelid>>11;
-	    int as=(EvtRed->CoboAsad[it].globalchannelid - (co<<11))>>9;
-	    int ag=(EvtRed->CoboAsad[it].globalchannelid - (co<<11)-(as<<9))>>7;
-	    int ch=EvtRed->CoboAsad[it].globalchannelid - (co<<11)-(as<<9)-(ag<<7);
-	    int where=co*NumberOfASAD*NumberOfAGET*NumberOfChannel + as*NumberOfAGET*NumberOfChannel + ag*NumberOfChannel + ch;
-	
+  for(unsigned int it=0; it<EvtRed->CoboAsad.size(); it++){
+    int co=EvtRed->CoboAsad[it].globalchannelid>>11;
+    int as=(EvtRed->CoboAsad[it].globalchannelid - (co<<11))>>9;
+    int ag=(EvtRed->CoboAsad[it].globalchannelid - (co<<11)-(as<<9))>>7;
+    int ch=EvtRed->CoboAsad[it].globalchannelid - (co<<11)-(as<<9)-(ag<<7);
+    int where=co*NumberOfASAD*NumberOfAGET*NumberOfChannel + as*NumberOfAGET*NumberOfChannel + ag*NumberOfChannel + ch;
 
-	    if(co!=31){
-	      for(unsigned int hit=0;hit<EvtRed->CoboAsad[it].peakheight.size();hit++){
-	        if(EvtRed->CoboAsad[it].peakheight[hit]>10 && EvtRed->CoboAsad[it].peaktime[hit]>1){
-		        Hit[TABLE[4][where]][TABLE[5][where]] += 1;
-	        }
-	      }
-	    }
-  	}
+
+    if(co!=31){
+      for(unsigned int hit=0;hit<EvtRed->CoboAsad[it].peakheight.size();hit++){
+        if(EvtRed->CoboAsad[it].peakheight[hit]>10 && EvtRed->CoboAsad[it].peaktime[hit]>1){
+          Hit[TABLE[4][where]][TABLE[5][where]] += 1;
+        }
+      }
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -341,8 +417,8 @@ void GetMayaSiHitPosition(double xm, double xh, double ym, double yh, double zm,
 
   TVector3 BeamDirection = TVector3(1,0,0);
   TVector3 HitPos = TVector3(SiMayaDistanceX,yf,zf);
-  ThetaLab.push_back(BeamDirection.Angle(HitPos)*180./TMath::Pi());
-  PhiLab.push_back(HitPos.Phi()*180./TMath::Pi());
+  //ThetaLab.push_back(BeamDirection.Angle(HitPos)*180./TMath::Pi());
+  //PhiLab.push_back(HitPos.Phi()*180./TMath::Pi());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -368,9 +444,14 @@ void Clear(){
   ZVertex.clear();
 
   SiMayaRawEnergy.clear();
+  SiMayaEnergy.clear();
   SiMayaNumber.clear();
   SiMayaPosY.clear();
   SiMayaPosZ.clear();
+
+  BeamEnergy.clear();
+  ELab.clear();
+  ExcitationEnergy.clear();
 
   for(int i=0; i<Configurator.GetNumberOfPadsX(); i++){
     for(int j=0; j<Configurator.GetNumberOfPadsY(); j++){

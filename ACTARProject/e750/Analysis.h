@@ -15,6 +15,9 @@
 #include "TVector3.h"
 #include "TCanvas.h"
 
+#include "NPEnergyLoss.h"
+#include "NPReaction.h"
+
 #define NumberOfCobo 16
 #define NumberOfASAD 4
 #define NumberOfAGET 4
@@ -30,6 +33,8 @@ void CleanPad();
 void Clear();
 void End();
 void GetMayaSiHitPosition(double xm, double xh, double ym, double yh, double zm, double zh);
+void ApplySiMayaCalibration();
+bool IsGoingToSilicon(int TrackID);
 
 //TTree* Tree;
 TChain* chain;
@@ -57,6 +62,8 @@ double DriftVelocity;
 
 int TABLE[6][NumberOfCobo*NumberOfASAD*NumberOfAGET*NumberOfChannel];
 int Hit[128][128];
+double p0[20];
+double p1[20];
 
 vector<int> vX;
 vector<int> vY;
@@ -89,5 +96,12 @@ vector<double> SiMayaTrackLength;
 
 map<int, int> Si_map;
 
+// Physical variables //
+vector<double> BeamEnergy;
+vector<double> ELab;
+vector<double> ExcitationEnergy;
 
-
+// NPTool //
+NPL::EnergyLoss EnergyLoss_Ne;
+NPL::EnergyLoss EnergyLoss_p;
+NPL::Reaction* TheReaction;
