@@ -43,12 +43,12 @@ private:
 	TGraph2D* pl;
 	vector<MTrack> vTrack;
 	vector<double> vTrackCharge;
-	vector<double> vTrackXmax;
+	/*vector<double> vTrackXmax;
 	vector<double> vTrackXmin;
 	vector<double> vTrackYmax;
 	vector<double> vTrackYmin;
 	vector<double> vTrackZmax;
-	vector<double> vTrackZmin;
+	vector<double> vTrackZmin;*/
 
 private:
 	float fRANSACThreshold;

@@ -32,24 +32,29 @@ int main(int argc, char** argv){
         //cout << vTrack.size() << " / "  << SiMayaEnergy.size() << endl;
         if(ThetaY[i]<70 || ThetaY[i]>110){
           for(unsigned int k=0; k<SiMayaEnergy.size(); k++){
-            int side = SiMayaSide[k];
-            double x1 = vTrack[k].GetXm()*Configurator.GetPadSizeX();
-            double x2 = vTrack[k].GetXh()*Configurator.GetPadSizeX();
-            double y1 = vTrack[k].GetYm()*Configurator.GetPadSizeY();
-            double y2 = vTrack[k].GetYh()*Configurator.GetPadSizeY();
-            double z1 = vTrack[k].GetZm()*Configurator.GetDriftVelocity()*80e-3;
-            double z2 = vTrack[k].GetZh()*Configurator.GetDriftVelocity()*80e-3;
-            GetMayaSiHitPosition(side,x1,x2,y1,y2,z1,z2);
-            double etot = EnergyLoss_He.EvaluateInitialEnergy(SiMayaEnergy[k]*MeV,SiMayaDistanceY[side],ThetaY[i]*deg);
-            ELab.push_back(etot);
-            SiMayaTrackLength.push_back(SiMayaDistanceY[side]/cos(ThetaY[i]/deg));
+            if(SiMayaEnergy[k]>0){
+              int side = SiMayaSide[k];
+              //cout << "yh = " << vTrack[k].GetYh() << endl;
+              //cout << "ym = " << vTrack[k].GetYm() << endl;
+              double x1 = vTrack[k].GetXm()*Configurator.GetPadSizeX();
+              double x2 = vTrack[k].GetXh()*Configurator.GetPadSizeX();
+              double y1 = vTrack[k].GetYm()*Configurator.GetPadSizeY();
+              double y2 = vTrack[k].GetYh()*Configurator.GetPadSizeY();
+              double z1 = vTrack[k].GetZm()*Configurator.GetDriftVelocity()*80e-3;
+              double z2 = vTrack[k].GetZh()*Configurator.GetDriftVelocity()*80e-3;
+              GetMayaSiHitPosition(side,x1,x2,y1,y2,z1,z2);
+              //cout << "Maya distance= " << SiMayaDistanceY[side] << endl;
+              double etot = EnergyLoss_He.EvaluateInitialEnergy(SiMayaEnergy[k]*MeV,SiMayaDistanceY[side],ThetaY[i]*deg);
+              ELab.push_back(etot);
+              SiMayaTrackLength.push_back(SiMayaDistanceY[side]/cos(ThetaY[i]/deg));
 
-            double EBeamAtVertex = EnergyLoss_C.Slow(74*MeV,(55+XVertex[i])*mm,0);
-            BeamEnergy.push_back(EBeamAtVertex);
+              double EBeamAtVertex = EnergyLoss_C.Slow(74*MeV,(55+XVertex[i])*mm,0);
+              BeamEnergy.push_back(EBeamAtVertex);
 
-            IneReaction->SetBeamEnergy(EBeamAtVertex);
-            IneReaction->SetNuclei3(etot,TrackAngle[i]*deg);
-            ExcitationEnergy.push_back(IneReaction->GetExcitation4());
+              IneReaction->SetBeamEnergy(EBeamAtVertex);
+              IneReaction->SetNuclei3(etot,TrackAngle[i]*deg);
+              ExcitationEnergy.push_back(IneReaction->GetExcitation4());
+            }
           }
         }
       }
@@ -108,10 +113,12 @@ void Init(){
   EnergyLoss_C = NPL::EnergyLoss("EnergyLossTable/Eloss_He_in_He-iC4H10.txt","SRIM",100);
   IneReaction = new NPL::Reaction("12C(4He,4He)12C@74");
 
-  //SiMayaDistanceY[0] = 37+39;
-  //SiMayaDistanceY[1] = 37+63;
   SiMayaDistanceY[0] = 37+63;
-  SiMayaDistanceY[1] = 37+39;
+  //SiMayaDistanceY[1] = 37+39;
+  SiMayaDistanceY[1] = 37+63;
+  //SiMayaDistanceY[0] = 5+63;
+  //SiMayaDistanceY[1] = 64+5+39;
+
 
   Configurator.ReadConfigurationFile("config/actar_config.txt");
 
@@ -160,7 +167,7 @@ void Init(){
 
 ////////////////////////////////////////////////////////////////////////////////
 void InitOutputTree(){
-  OutputFile = new TFile("FittedTracks.root","RECREATE");
+  OutputFile = new TFile("/space/morfouace/ACTAR/NSI-37/root-files/FittedTracks.root","RECREATE");
   OutputTree = new TTree("PhysicsTree","PhysicsTree");
 
   OutputTree->Branch("Event",&Event,"Event/I");
@@ -169,7 +176,7 @@ void InitOutputTree(){
   OutputTree->Branch("ThetaY",&ThetaY);
   OutputTree->Branch("TrackCharge",&vTrackCharge);
   OutputTree->Branch("TrackLength",&vTrackLength);
-  OutputTree->Branch("ELoss",&ELoss);
+  OutputTree->Branch("dedx",&dedx);
   OutputTree->Branch("XVertex",&XVertex);
   OutputTree->Branch("YVertex",&YVertex);
   OutputTree->Branch("ZVertex",&ZVertex);
@@ -227,9 +234,9 @@ void TreatEventWithSimpleRansac(){
     ThetaY.push_back(TVector3(0,1,0).Angle(aTrack)*180/TMath::Pi());
 
     if(vTrackLength[i]>0){
-      ELoss.push_back(vTrackCharge[i]/vTrackLength[i]);
+      dedx.push_back(vTrackCharge[i]/vTrackLength[i]);
     }
-    else ELoss.push_back(-100);
+    else dedx.push_back(-100);
   }
 }
 
@@ -248,7 +255,7 @@ void Clear(){
   vTrack.clear();
   vTrackCharge.clear();
   vTrackLength.clear();
-  ELoss.clear();
+  dedx.clear();
   TrackAngle.clear();
   ThetaY.clear();
   XVertex.clear();
@@ -491,8 +498,54 @@ void ApplyCalibration(){
 ////////////////////////////////////////////////////////////////////////////////
 void GetMayaSiHitPosition(int side, double xm, double xh, double ym, double yh, double zm, double zh)
 {
-  double zf = zh + (zm-zh)*(SiMayaDistanceY[side]-yh)/(ym-yh);
-  double xf = xh + (xm-xh)*(SiMayaDistanceY[side]-yh)/(ym-yh);
+  double x1, x2;
+  double y1, y2;
+  double z1, z2;
+
+
+  if(ym>yh && side==1){
+    x1 = xh;
+    y1 = yh;
+    z1 = zh;
+    x2 = xm;
+    y2 = ym;
+    z2 = zm;
+  }
+  else if(ym<yh && side==1){
+    x1 = xm;
+    y1 = ym;
+    z1 = zm;
+    x2 = xh;
+    y2 = yh;
+    z2 = zh;
+  }
+  if(ym>yh && side==0){
+    x1 = xm;
+    y1 = ym;
+    z1 = zm;
+    x2 = xh;
+    y2 = yh;
+    z2 = zh;
+  }
+  else if(ym<yh && side==0){
+    x1 = xh;
+    y1 = yh;
+    z1 = zh;
+    x2 = xm;
+    y2 = ym;
+    z2 = zm;
+  }
+
+  double l = abs(ym-yh);
+  double L;
+  if(side==1) L = abs(-SiMayaDistanceY[side]-yh);
+  else L = abs(SiMayaDistanceY[side]-yh);
+
+  //double t = (l+L)/l;
+  double t = L/l;
+
+  double zf = zh + (zm-zh)*t;
+  double xf = xh + (xm-xh)*t;
 
   SiMayaPosX.push_back(xf);
   SiMayaPosZ.push_back(zf);

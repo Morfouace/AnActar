@@ -18,10 +18,10 @@ using namespace std;
 MSimpleRansac::MSimpleRansac(int NumberOfPadsX, int NumberOfPadsY, int verbose)
 {
 	fRANSACMaxIteration = 1000;
-	fRANSACThreshold = 10;//40;
+	fRANSACThreshold = 60;//100;
 	fRANSACPointThreshold = 0.04;//0.07;
 	fRANSACChargeThreshold = 0.04;//0.07;
-	fRANSACDistance = 7;//7;
+	fRANSACDistance = 11;//7;
 
 	fNumberOfPadsX = NumberOfPadsX;
 	fNumberOfPadsY = NumberOfPadsY;
@@ -29,7 +29,7 @@ MSimpleRansac::MSimpleRansac(int NumberOfPadsX, int NumberOfPadsY, int verbose)
 	//fNumberOfTracksMax = 10;
 
 	if(fVerbose==1){
-		hXYZ 	= new TH3F("hXYZ","hXYZ",NumberOfPadsX,0,NumberOfPadsX,NumberOfPadsY,0,NumberOfPadsY,128,0,512);
+		hXYZ 	= new TH3F("hXYZ","hXYZ",NumberOfPadsX,0,NumberOfPadsX,NumberOfPadsY,0,NumberOfPadsY,512,0,512);
 		pl		= new TGraph2D();
 	}
 }
@@ -75,7 +75,7 @@ vector<MTrack> MSimpleRansac::SimpleRansac()
 
 	TRandom* Rand=new TRandom();
 	double RemainingCharge = fTotalCharge;
-	vector<double> trackX, trackY, trackZ;
+	//vector<double> trackX, trackY, trackZ;
 
 	int aa=0;
 	//while(vX.size() > fOriginalCloudSize*fRANSACPointThreshold){
@@ -86,9 +86,9 @@ vector<MTrack> MSimpleRansac::SimpleRansac()
 		double x1,x2,y1,y2,z1,z2;
 	  double minErr=1E20;
 		double track_charge=0;
-		trackX.clear();
+		/*trackX.clear();
 		trackY.clear();
-		trackZ.clear();
+		trackZ.clear();*/
 
 	  TVector3 V1, V2;
 	  std::vector< int> inliners;
@@ -128,9 +128,9 @@ vector<MTrack> MSimpleRansac::SimpleRansac()
 						//cout << vY[p] << endl;
 						if((vY[p]>0 && vY[p]<5) || (vY[p]<31 && vY[p]>26)){
 							track_charge += vQ[p];
-							trackX.push_back(vX[p]);
+							/*trackX.push_back(vX[p]);
 							trackY.push_back(vY[p]);
-							trackZ.push_back(vZ[p]);
+							trackZ.push_back(vZ[p]);*/
 						}
 	        }
 	      }
@@ -165,16 +165,16 @@ vector<MTrack> MSimpleRansac::SimpleRansac()
 		myTrack.Zh=V2.z();
 
 		vTrack.push_back(myTrack);
-		vTrackCharge.push_back(track_charge);
+		//vTrackCharge.push_back(track_charge);
 
-		if(trackX.size()>0){
+		/*if(trackX.size()>0){
 			vTrackXmax.push_back(*max_element(trackX.begin(), trackX.end()));
 			vTrackXmin.push_back(*min_element(trackX.begin(), trackX.end()));
 			vTrackYmax.push_back(*max_element(trackY.begin(), trackY.end()));
 			vTrackYmin.push_back(*min_element(trackY.begin(), trackY.end()));
 			vTrackZmax.push_back(*max_element(trackZ.begin(), trackZ.end()));
 			vTrackZmin.push_back(*min_element(trackZ.begin(), trackZ.end()));
-		}
+		}*/
 
 		/*cout << "Xh= " << myTrack.Xh << endl;
 		cout << "Yh= " << myTrack.Yh << endl;
@@ -228,17 +228,24 @@ vector<double> MSimpleRansac::GetChargeOfTracks()
 vector<double> MSimpleRansac::GetTrackLength(double PadSizeX, double PadSizeY, double DriftVelocity)
 {
 	vector<double> length;
-	double Xmin, Xmax;
 	double Ymin, Ymax;
 	double Zmin, Zmax;
+	double Xmin = 240;
+	double Xmax = 256;
 
 	for(unsigned int i=0; i<vTrack.size(); i++){
-		Xmin = vTrackXmin[i]*PadSizeX;
-		Xmax = vTrackXmax[i]*PadSizeX;
-		Ymin = vTrackYmin[i]*PadSizeY;
-		Ymax = vTrackYmax[i]*PadSizeY;
-		Zmin = vTrackZmin[i]*DriftVelocity;
-		Zmax = vTrackZmax[i]*DriftVelocity;
+		double xh = vTrack[i].GetXh()*PadSizeX;
+		double xm = vTrack[i].GetXm()*PadSizeX;
+		double yh = vTrack[i].GetYh()*PadSizeY;
+		double ym = vTrack[i].GetYm()*PadSizeY;
+		double zh = vTrack[i].GetZh()*DriftVelocity;
+		double zm = vTrack[i].GetZm()*DriftVelocity;
+
+		Ymin = yh + (ym - yh)*(Xmin-xh)/(xm-xh);
+		Ymax = yh + (ym - yh)*(Xmax-xh)/(xm-xh);
+
+		Zmin = zh + (zm - zh)*(Xmin-xh)/(xm-xh);
+		Zmax = zh + (zm - zh)*(Xmax-xh)/(xm-xh);
 
 		length.push_back(sqrt( pow(Xmax-Xmin,2) + pow(Ymax-Ymin,2) + pow(Zmax-Zmin,2) ));
 	}
@@ -266,12 +273,12 @@ void MSimpleRansac::Reset()
 	vQ.clear();
 	vTrack.clear();
 	vTrackCharge.clear();
-	vTrackXmax.clear();
+	/*vTrackXmax.clear();
 	vTrackXmin.clear();
 	vTrackYmax.clear();
 	vTrackYmin.clear();
 	vTrackZmax.clear();
-	vTrackZmin.clear();
+	vTrackZmin.clear();*/
 }
 
 //////////////////////////////////////////////////
@@ -292,10 +299,12 @@ double MSimpleRansac::Fit3D(vector<int> X, vector<int> Y, vector<double> Z, vect
     double rho,phi;
 
     Q=Xm=Ym=Zm=0.;
+		double total_charge=0;
     Sxx=Syy=Szz=Sxy=Sxz=Syz=0.;
 
     for (auto i : inliners)
     {
+	if(X[i]>119)total_charge+=Charge[i];
         Q+=Charge[i]/10.;
         Xm+=X[i]*Charge[i]/10.;
         Ym+=Y[i]*Charge[i]/10.;
@@ -307,6 +316,8 @@ double MSimpleRansac::Fit3D(vector<int> X, vector<int> Y, vector<double> Z, vect
         Sxz+=X[i]*Z[i]*Charge[i]/10.;
         Syz+=Y[i]*Z[i]*Charge[i]/10.;
     }
+    vTrackCharge.push_back(total_charge);
+
     Xm/=Q;
     Ym/=Q;
     Zm/=Q;

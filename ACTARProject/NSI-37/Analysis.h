@@ -75,7 +75,7 @@ vector<double> ThetaY;
 vector<double> XVertex;
 vector<double> YVertex;
 vector<double> ZVertex;
-vector<double> ELoss;
+vector<double> dedx;
 
 // DSSD Parameters //
 vector<int> LTNumber;

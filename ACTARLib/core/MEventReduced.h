@@ -16,6 +16,7 @@ class ReducedData: public TObject
 	virtual ~ReducedData(){};
 
 	unsigned short globalchannelid;
+	bool hasSaturation;
 	
 	std::vector<float> peakheight;
 	std::vector<float> peaktime;
