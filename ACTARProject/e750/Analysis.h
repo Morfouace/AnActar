@@ -35,8 +35,9 @@ void End();
 void GetMayaSiHitPosition(double xm, double xh, double ym, double yh, double zm, double zh);
 void ApplySiMayaCalibration();
 bool IsGoingToSilicon(int TrackID);
+bool IsGoodSilicon(int ID);
 
-//TTree* Tree;
+
 TChain* chain;
 TTree* OutputTree;
 TFile* OutputFile;
@@ -50,8 +51,13 @@ MSimpleRansac* Ransac;
 MHough Hough;
 MDetectorConfig Configurator;
 
+TString Base_Path="/space/morfouace/ACTAR/e750/root-files/FittedTree.root";
+bool bRansacVisu=false;
+
 map<int, vector<int>> mXYZ;
 map<int, vector<int>> mQ;
+
+double BeamAngle;
 
 
 int PadNumberX;
@@ -84,6 +90,10 @@ vector<double> XVertex;
 vector<double> YVertex;
 vector<double> ZVertex;
 
+vector<double> PositionOfInteractionX;
+vector<double> PositionOfInteractionY;
+vector<double> PositionOfInteractionZ;
+
 // Si Maya parameters //;
 double SiMayaDistanceX=256+58;
 vector<double> SiMayaSignal;
@@ -92,14 +102,18 @@ vector<double> SiMayaRawEnergy;
 vector<double> SiMayaEnergy;
 vector<double> SiMayaPosZ;
 vector<double> SiMayaPosY;
+vector<double> YMaya;
+vector<double> ZMaya;
 vector<double> SiMayaTrackLength;
 
 map<int, int> Si_map;
 
 // Physical variables //
 vector<double> BeamEnergy;
+vector<double> ESi;
 vector<double> ELab;
 vector<double> ExcitationEnergy;
+vector<double> Ecm;
 
 // NPTool //
 NPL::EnergyLoss EnergyLoss_Ne;
